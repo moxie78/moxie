@@ -1,0 +1,159 @@
+local Translations = {
+    ["Base Tools"] = "基础工具by😄汉化",
+    ["Set My Base (Current Position)"] = "设置我的基地（当前位置）",
+    ["SELL & Return (5 sec)"] = "出售并返回（5秒）",
+    ["Ore TP Loop"] = "自动获取矿石",
+    ["Select Ore to Loop TP"] = "选择要获取的矿石",
+    ["Enable Ore TP Loop"] = "启用自动获取矿石",
+    ["Locations"] = "传送位置",
+    ["Teleport to SHOP"] = "传送到商店",
+    ["Teleport to BASE"] = "传送到基地",
+    ["Teleport to MINE"] = "传送到矿场",
+    ["Teleport to Rebirth Shop"] = "传送到重生商店",
+    ["Teleport to Explosive Shop"] = "传送到炸药商店",
+    ["Tin"] = "锡",
+    ["Iron"] = "铁",
+    ["Lead"] = "铅",
+    ["Cobalt"] = "钴",
+    ["Silver"] = "银",
+    ["Aluminium"] = "铝",
+    ["Uranium"] = "铀",
+    ["Vanadium"] = "钒",
+    ["Titanium"] = "钛",
+    ["Gold"] = "金",
+    ["Tungsten"] = "钨",
+    ["Plutonium"] = "钚",
+    ["Palladium"] = "钯",
+    ["Iridium"] = "铱",
+    ["Adamantium"] = "艾德曼合金",
+    ["Thorium"] = "钍",
+    ["Mithril"] = "秘银",
+    ["Rhodium"] = "铑",
+    ["Unobtainium"] = "幻金属",
+    ["Topaz"] = "黄玉",
+    ["Emerald"] = "祖母绿",
+    ["Ruby"] = "红宝石",
+    ["Sapphire"] = "蓝宝石",
+    ["Diamond"] = "钻石",
+    ["Musgravite"] = "镁铁铝榴石",
+    ["Painite"] = "塔菲石",
+    ["Poudretteite"] = "硅硼钾钠石",
+    ["Zultanite"] = "变色水铝石",
+    ["Grandidierite"] = "硼铝石",
+    ["Ore Hitbox Expand"] = "扩大矿石碰撞箱",
+    ["Hitbox Size"] = "碰撞箱大小",
+    ["Walk Speed"] = "行走速度",
+    ["Infinite Jump"] = "百段跳",
+    ["Insta Mine"] = "一键挖矿",
+    ["Ore ESP"] = "矿石透视",
+    ["Enable Ore ESP"] = "启用矿石透视",
+    ["Show Ore Names"] = "显示矿石名称",
+    ["Show Distances"] = "显示距离",
+    ["Ultimate Mining Tycoon"] = "终极采矿大亨",
+    ["Teleport"] = "传送",
+    ["Farming"] = "刷资源",
+    ["Player"] = "玩家",
+    ["Visuals"] = "透视",
+    ["Render Distance"] = "透视距离",
+}
+
+local function translateText(text)
+    if not text or type(text) ~= "string" then return text end
+    if Translations[text] then return Translations[text] end
+    for en, cn in pairs(Translations) do
+        if text:find(en) then return text:gsub(en, cn) end
+    end
+    return text
+end
+
+local translatedElements = {}
+local originalTexts = {}
+
+local function safeTranslateElement(element)
+    if translatedElements[element] then return end
+    
+    pcall(function()
+        if element:IsA("TextLabel") or element:IsA("TextButton") or element:IsA("TextBox") then
+            local currentText = element.Text
+            if currentText and currentText ~= "" then
+                if not originalTexts[element] then
+                    originalTexts[element] = currentText
+                end
+                
+                local translatedText = translateText(currentText)
+                if translatedText ~= currentText then
+                    element.Text = translatedText
+                    translatedElements[element] = true
+                end
+            end
+        end
+    end)
+end
+
+local function setupSmartListener()
+    local function onTextPropertyChanged(element)
+        if translatedElements[element] then
+            local currentText = element.Text
+            local originalText = originalTexts[element]
+            
+            if currentText == originalText or translateText(currentText) == currentText then
+                translatedElements[element] = nil
+                return
+            end
+            
+            local translatedText = translateText(currentText)
+            if translatedText ~= currentText then
+                element.Text = translatedText
+            end
+        else
+            safeTranslateElement(element)
+        end
+    end
+
+    local function addSmartListener(parent)
+        parent.DescendantAdded:Connect(function(descendant)
+            task.wait(0.3)  -- 新元素翻译延迟（改小可加快响应）
+            safeTranslateElement(descendant)
+            
+            if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                descendant:GetPropertyChangedSignal("Text"):Connect(function()
+                    task.wait(0.1)  -- 文本变化翻译延迟（改小可加快响应）
+                    onTextPropertyChanged(descendant)
+                end)
+            end
+        end)
+    end
+    
+    pcall(addSmartListener, game:GetService("CoreGui"))
+    local player = game:GetService("Players").LocalPlayer
+    if player and player:FindFirstChild("PlayerGui") then
+        pcall(addSmartListener, player.PlayerGui)
+    end
+end
+
+local function delayedInitialTranslate()
+    task.wait(5)
+    
+    for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
+        safeTranslateElement(gui)
+    end
+    
+    local player = game:GetService("Players").LocalPlayer
+    if player and player:FindFirstChild("PlayerGui") then
+        for _, gui in ipairs(player.PlayerGui:GetDescendants()) do
+            safeTranslateElement(gui)
+        end
+    end
+end
+
+task.wait(2)
+setupSmartListener()
+delayedInitialTranslate()
+
+local success, err = pcall(function()
+    loadstring(game:HttpGet("https://pastefy.app/ULaWpxKm/raw"))()
+end)
+
+if not success then
+    warn("加载失败:", err)
+end
