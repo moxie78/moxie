@@ -1,0 +1,186 @@
+local Translations = {
+    ["Kill Aura"] = "杀戮光环by😄",
+    ["Target Priority"] = "优先攻击目标",
+    ["Nearest"] = "最近",
+    ["Lowest HP"] = "最低血量",
+    ["Highest HP"] = "最高血量",
+    ["Auto-Equip Weapon"] = "自动装备武器",
+    ["Show Target Indicator"] = "显示目标",
+    ["Extended Range (+2 studs)"] = "碰撞箱扩大（+2单位）",
+    ["Player ESP"] = "透视玩家",
+    ["Player Chams"] = "玩家高亮",
+    ["Show Health"] = "显示血量",
+    ["Structure ESP"] = "透视建筑",
+    ["Structure Chams"] = "建筑高亮",
+    ["Abilities ESP"] = "技能透视",
+    ["Aimbot"] = "自瞄",
+    ["Target Mode"] = "目标模式",
+    ["Aim Part"] = "瞄准部位",
+    ["Velocity Prediction"] = "弹道预测",
+    ["FOV Circle"] = "视野圈",
+    ["Mobs"] = "怪物",
+    ["Players"] = "玩家",
+    ["Both"] = "全部",
+    ["Distance"] = "距离",
+    ["FOV"] = "视野",
+    ["Movement"] = "移动",
+    ["Speed Hack"] = "加速移动",
+    ["Inf Jump"] = "百段跳",
+    ["NoClip"] = "穿墙",
+    ["Fly"] = "飞行",
+    ["Auto Sprint"] = "自动疾跑",
+    ["Bunny Hop"] = "连跳",
+    ["Funny Dance FE"] = "趣味舞蹈",
+    ["Funny Dance"] = "舞蹈风格",
+    ["Shuffle (Dance 1)"] = "曳步舞（舞蹈1）",
+    ["Twist (Dance 2)"] = "扭腰舞（舞蹈2）",
+    ["Robot (Dance 3)"] = "机械舞（舞蹈3）",
+    ["PinatHub"] = "Pinat中心",
+    ["Survive the Apocalypse"] = "末日生存",
+    ["ESP Settings"] = "透视设置",
+    ["Show Names"] = "显示名称",
+    ["Show Distance"] = "显示距离",
+    ["Mob ESP"] = "怪物透视",
+    ["Mob Chams"] = "怪物高亮",
+    ["Item ESP"] = "物品透视",
+    ["Chams (All Categories)"] = "高亮（全部）",
+    ["Gun ESP"] = "枪械透视",
+    ["Melee ESP"] = "近战透视",
+    ["Medical ESP"] = "医疗透视",
+    ["Armor ESP"] = "护甲透视",
+    ["Food ESP"] = "食物透视",
+    ["Resources ESP"] = "资源透视",
+    ["Fuel ESP"] = "燃料透视",
+    ["Bring Pickup Item"] = "取货物品瞬移",
+    ["All Pickup Items"] = "全部拾取物品",
+    ["Sort Order"] = "排序方式",
+    ["Nearest First"] = "最近优先",
+    ["Farthest First"] = "最远优先",
+    ["Alphabetical"] = "字母排序",
+    ["Reverse Alphabetical"] = "逆字母顺序",
+    ["Utilities"] = "实用工具",
+    ["Anti-AFK"] = "反挂机",
+    ["Fullbright"] = "全亮",
+    ["Remove Fog"] = "除雾",
+    ["Server Hop"] = "换服务器",
+    ["Rejoin Server"] = "重新连接服务器",
+    ["Remote Spy"] = "远程监听",
+    ["Enable Remote Spy"] = "启用远程监听",
+    ["WhatsApp Group"] = "WhatsApp Group群聊",
+    ["Join WhatsApp Group"] = "加入 WhatsApp Group群聊",
+    ["Discord Server"] = "dc服务器",
+    ["Join Discord Server"] = "加入dc服务器",
+    ["Server Tools"] = "服务器工具",
+    ["Head"] = "头部",
+    ["HumanoidRootPart"] = "人形根部件",
+    ["Torso"] = "躯干",
+    ["UpperTorso"] = "上躯干",
+    ["Dance Style"] = "舞蹈风格",
+    ["Visuals"] = "透视",
+    ["Player"] = "玩家",
+    ["Combat"] = "战斗",
+    ["Exploits"] = "脚本功能",
+    ["Misc"] = "其他",
+    ["Community"] = "社区",
+}
+
+local function translateText(text)
+    if not text or type(text) ~= "string" then return text end
+    if Translations[text] then return Translations[text] end
+    for en, cn in pairs(Translations) do
+        if text:find(en) then return text:gsub(en, cn) end
+    end
+    return text
+end
+
+local translatedElements = {}
+local originalTexts = {}
+
+local function safeTranslateElement(element)
+    if translatedElements[element] then return end
+    
+    pcall(function()
+        if element:IsA("TextLabel") or element:IsA("TextButton") or element:IsA("TextBox") then
+            local currentText = element.Text
+            if currentText and currentText ~= "" then
+                if not originalTexts[element] then
+                    originalTexts[element] = currentText
+                end
+                
+                local translatedText = translateText(currentText)
+                if translatedText ~= currentText then
+                    element.Text = translatedText
+                    translatedElements[element] = true
+                end
+            end
+        end
+    end)
+end
+
+local function setupSmartListener()
+    local function onTextPropertyChanged(element)
+        if translatedElements[element] then
+            local currentText = element.Text
+            local originalText = originalTexts[element]
+            
+            if currentText == originalText or translateText(currentText) == currentText then
+                translatedElements[element] = nil
+                return
+            end
+            
+            local translatedText = translateText(currentText)
+            if translatedText ~= currentText then
+                element.Text = translatedText
+            end
+        else
+            safeTranslateElement(element)
+        end
+    end
+
+    local function addSmartListener(parent)
+        parent.DescendantAdded:Connect(function(descendant)
+            task.wait(0.3)  -- 新元素翻译延迟（改小可加快响应）
+            safeTranslateElement(descendant)
+            
+            if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                descendant:GetPropertyChangedSignal("Text"):Connect(function()
+                    task.wait(0.1)  -- 文本变化翻译延迟（改小可加快响应）
+                    onTextPropertyChanged(descendant)
+                end)
+            end
+        end)
+    end
+    
+    pcall(addSmartListener, game:GetService("CoreGui"))
+    local player = game:GetService("Players").LocalPlayer
+    if player and player:FindFirstChild("PlayerGui") then
+        pcall(addSmartListener, player.PlayerGui)
+    end
+end
+
+local function delayedInitialTranslate()
+    task.wait(5)
+    
+    for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
+        safeTranslateElement(gui)
+    end
+    
+    local player = game:GetService("Players").LocalPlayer
+    if player and player:FindFirstChild("PlayerGui") then
+        for _, gui in ipairs(player.PlayerGui:GetDescendants()) do
+            safeTranslateElement(gui)
+        end
+    end
+end
+
+task.wait(2)
+setupSmartListener()
+delayedInitialTranslate()
+
+local success, err = pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/xploitforceofficial-stack/pinatpublicloader/refs/heads/main/pinatloader.lua"))()
+end)
+
+if not success then
+    warn("加载失败:", err)
+end
