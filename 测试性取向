@@ -1,0 +1,23 @@
+import random
+
+print("========名字Gay值检测仪（娱乐专用）========")
+name = input("请输入要检测的名字：")
+# 随机生成0-100分数
+score = random.randint(0, 100)
+
+# 分档位文案
+if score <= 20:
+    msg = "钢铁直人，毫无氛围感"
+elif score <= 40:
+    msg = "标准直，对同性完全无感"
+elif score <= 60:
+    msg = "轻度双，男女都能欣赏"
+elif score <= 80:
+    msg = "氛围感拉满，很容易喜欢同性"
+else:
+    msg = "百分百纯同，属性直接拉满！"
+
+print(f"\n【{name}】Gay值检测完成")
+print(f"综合分数：{score} / 100")
+print(f"属性评价：{msg}")
+print("\n⚠ 提示：本程序纯属搞笑娱乐，不代表真实取向！")
